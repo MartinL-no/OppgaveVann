@@ -21,13 +21,17 @@ public class Water
     {
         switch (Temperature)
         {
-            case double n when (n < 0):
+            case double n when (n < 0 || n == 0 && ProportionFirstState == 0):
                 return WaterState.Ice;
-            case double n when (n == 0 && ProportionFirstState != null):
+            case double n when (n == 0 && ProportionFirstState < 1):
                 return WaterState.IceAndFluid;
-            case double n when (n >= 0 && n < 100):
+            case double n when (n == 0 && ProportionFirstState >= 1):
                 return WaterState.Fluid;
-            case double n when (n == 100 && ProportionFirstState != null):
+            case double n when (n > 0 && n < 100):
+                return WaterState.Fluid;
+            case double n when (n == 100 && ProportionFirstState == 0):
+                return WaterState.Fluid;
+            case double n when (n == 100 && ProportionFirstState > 0 && ProportionFirstState < 1):
                 return WaterState.FluidAndGas;
             case double n when (n >= 100):
                 return WaterState.Gas;
@@ -39,38 +43,39 @@ public class Water
 
     public void AddEnergy(double calories)
     {
-        Console.WriteLine("Amount: " + Amount);
-        Console.WriteLine("Temperature: " + Temperature);
-        Console.WriteLine("Calories: " + calories);
-        Console.WriteLine("State: " + State);
-        Console.WriteLine("proportion: " + ProportionFirstState);
-        Console.WriteLine();
+        var temperatureWithCaloriesAdded = Temperature + (calories / Amount);
 
-        if (Temperature < 0 && Temperature + (calories / Amount) >= 0)
+        if (Temperature < 0 && temperatureWithCaloriesAdded >= 0)
         {
-            CalculateTemperatureChangeWithCorrectBreakpoint(calories, 0, 80);
+            CalculateTemperatureAndProportionWithCorrectBreakpoint(calories, 0, 80);
         }
-        else if (Temperature < 100 && Temperature + (calories / Amount) >= 100)
+        else if (Temperature < 100 && temperatureWithCaloriesAdded >= 100)
         {
-            CalculateTemperatureChangeWithCorrectBreakpoint(calories, 100, 600);
+            CalculateTemperatureAndProportionWithCorrectBreakpoint(calories, 100, 600);
         }
         else
         {
-            Temperature += (double) calories / Amount;
+            Temperature = temperatureWithCaloriesAdded;
         }
+ 
     }
-    private void CalculateTemperatureChangeWithCorrectBreakpoint(double calories, int breakpoint, int breakpointEnergy)
+    private void CalculateTemperatureAndProportionWithCorrectBreakpoint(double calories, int breakpoint, int breakpointEnergy)
     {
-        var caloriesToSubtractForToReachBreakingPoint = (breakpoint - Temperature) * Amount;
-        calories -= caloriesToSubtractForToReachBreakingPoint;
+        var caloriesToSubtractToReachBreakpoint = (breakpoint - Temperature) * Amount;
+        calories -= caloriesToSubtractToReachBreakpoint;
 
         if (calories > 0)
         {
             var caloriesToConvert = Amount * breakpointEnergy;
-            ProportionFirstState = 1 - calories / caloriesToConvert;
-            ProportionFirstState = ProportionFirstState <= 0 ? null : ProportionFirstState;
+            ProportionFirstState = calories / caloriesToConvert;
+            ProportionFirstState = ProportionFirstState >= 1 ? 1 : 1 - ProportionFirstState;
+
             calories = ProportionFirstState < 1 ? 0 : calories - caloriesToConvert;
+            Temperature = breakpoint + (calories / Amount);
         }
-        Temperature = breakpoint + (calories / Amount);
+        else
+        {
+            Temperature += calories / Amount;
+        }  
     }
 }
