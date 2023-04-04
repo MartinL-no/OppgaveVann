@@ -48,6 +48,13 @@ namespace OppgaveVann.Test
             Assert.AreEqual(0.3, water.ProportionFirstState);
         }
         [Test]
+        public void Test06WaterAt100Degrees()
+        {
+            var water = new Water(50, 100, 0.3);
+            Assert.AreEqual(WaterState.FluidAndGas, water.State);
+            Assert.AreEqual(100, water.Temperature);
+        }
+        [Test]
         public void Test07WaterAt100Degrees()
         {
             var water = new Water(50, 100, 0.3);
